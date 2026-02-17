@@ -87,4 +87,4 @@ if st.button("RUN COMPLIANCE SCAN"):
 
 # Footer
 st.markdown("---")
-st.caption("🔒 Secured by AI Compliance Engine v1.0")
+st.markdown("🔒 Secured by AI Compliance Engine v1.0 | [Connect with the Founder](https://www.linkedin.com/in/shahzil-ali-77a7773b1/)")

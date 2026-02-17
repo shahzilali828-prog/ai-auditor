@@ -1,0 +1,10 @@
+GDPR COMPLIANCE AUDIT REPORT: thelondondentalcentre.co.uk
+=================================================
+
+STATUS: FAILED (High Risk of Fines)
+
+CRITICAL ISSUES FOUND:
+[X] CRITICAL: Missing 'Do Not Sell' link (CCPA Requirement)
+
+RECOMMENDED ACTION:
+Immediate implementation of Article 13 & 17 clauses required.
