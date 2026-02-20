@@ -1,6 +1,4 @@
 requests
 beautifulsoup4
-lxml
 termcolor
-openai
 streamlit

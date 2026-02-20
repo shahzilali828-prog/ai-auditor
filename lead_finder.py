@@ -1,8 +1,5 @@
 import requests
 from termcolor import colored
-
-import requests
-from termcolor import colored
 import re
 from bs4 import BeautifulSoup
 
