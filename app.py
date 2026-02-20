@@ -1,6 +1,13 @@
-import streamlit as st
-from scanner import GDPRScanner
-import time
+try:
+    import streamlit as st
+    import time
+    from scanner import GDPRScanner
+except Exception as e:
+    import streamlit as st
+    st.error(f"Startup Error: {e}")
+    import traceback
+    st.code(traceback.format_exc())
+    st.stop()
 
 # Page Config
 st.set_page_config(page_title="AI GDPR Auditor", page_icon="⚖️", layout="centered")
