@@ -1,5 +1,6 @@
 import requests
-from termcolor import colored
+def colored(text, color=None, on_color=None, attrs=None):
+    return text
 import re
 from bs4 import BeautifulSoup
 

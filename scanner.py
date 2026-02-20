@@ -1,7 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 import re
-from termcolor import colored
+def colored(text, color=None, on_color=None, attrs=None):
+    return text
 from urllib.parse import urljoin
 
 class GDPRScanner:
