@@ -75,7 +75,7 @@ if st.button("RUN COMPLIANCE SCAN"):
             # 2. Copy the "Share" link (e.g., https://yoursite.lemonsqueezy.com/checkout/buy/...)
             LEMON_SQUEEZY_LINK = "https://ai-auditor.lemonsqueezy.com/checkout/buy/80d5c30f-889c-488d-a6ba-1912f0a6d9af" 
             
-            st.markdown(f"[**👉 CLICK HERE TO DOWNLOAD THE FIX ($499)**]({LEMON_SQUEEZY_LINK})")
+            st.markdown(f"[**👉 CLICK HERE TO DOWNLOAD THE FIX ($297)**]({LEMON_SQUEEZY_LINK})")
             
         elif result["status"] == "SECURE":
             st.success("✅ PASSED: Your website appears compliant!")

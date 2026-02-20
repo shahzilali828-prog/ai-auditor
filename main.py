@@ -10,7 +10,20 @@ def main():
     print(colored("=================================================\n", "cyan", attrs=['bold']))
 
     # 1. Setup
-    target_domain = input("Enter target domain (e.g. stripe.com): ").strip()
+    target_input = input("Enter target domain or URL (e.g. stripe.com): ").strip()
+    
+    # Clean the input to get just the domain
+    if "://" in target_input:
+        from urllib.parse import urlparse
+        target_domain = urlparse(target_input).netloc
+        if not target_domain: # Fallback if netloc is empty
+             target_domain = target_input.split('/')[2]
+    else:
+        target_domain = target_input.split('/')[0] # Handle input like "google.com/foo"
+    
+    # Remove 'www.' if present for cleaner files
+    target_domain = target_domain.replace('www.', '')
+
     if not target_domain:
         print("Invalid domain.")
         return

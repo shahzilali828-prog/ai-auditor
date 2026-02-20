@@ -50,45 +50,57 @@ class LeadFinder:
 
     def find_with_scraper(self, domain):
         """
-        FREE METHOD: Scans the homepage for mailto: links and regex matches.
+        FREE METHOD: Scans the homepage AND common contact pages for emails.
         """
-        url = f"https://{domain}"
-        print(f"[*] Scraping {url} for emails (Free Mode)...")
+        paths = ["", "/contact", "/contact-us", "/about", "/legal"]
         found_emails = set()
         
-        try:
-            headers = {'User-Agent': 'Mozilla/5.0'}
-            response = requests.get(url, headers=headers, timeout=10)
-            soup = BeautifulSoup(response.text, 'html.parser')
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        
+        for path in paths:
+            url = f"https://{domain}{path}"
+            print(f"[*] Scraping {url}...")
+            
+            try:
+                response = requests.get(url, headers=headers, timeout=8)
+                if response.status_code != 200:
+                    continue
+                    
+                soup = BeautifulSoup(response.text, 'html.parser')
 
-            # 1. Search for 'mailto:' links
-            for a in soup.find_all('a', href=True):
-                if 'mailto:' in a['href']:
-                    email = a['href'].replace('mailto:', '').split('?')[0]
-                    found_emails.add(email)
+                # 1. Search for 'mailto:' links
+                for a in soup.find_all('a', href=True):
+                    if 'mailto:' in a['href']:
+                        email = a['href'].replace('mailto:', '').split('?')[0].strip()
+                        if "@" in email:
+                            found_emails.add(email)
 
-            # 2. Regex Search in text
-            text = soup.get_text()
-            # Simple email regex
-            regex_emails = re.findall(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', text)
-            for email in regex_emails:
-                # Filter out junk (like image@2x.png)
-                if domain in email: # Only keep emails from the target domain
-                    found_emails.add(email)
+                # 2. Regex Search in text (More robust regex)
+                text = soup.get_text()
+                regex_emails = re.findall(r'[a-zA-Z0-9.\-_+]+@[a-zA-Z0-9.\-_]+\.[a-zA-Z]{2,}', text)
+                
+                for email in regex_emails:
+                    # Filter out junk common in scrapers
+                    email = email.lower().strip()
+                    junk_extensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp']
+                    if any(email.endswith(ext) for ext in junk_extensions):
+                        continue
+                    
+                    # Only keep emails that likely belong to the domain or are common contact aliases
+                    if domain.split('.')[0] in email or any(x in email for x in ['info@', 'contact@', 'hello@', 'support@', 'admin@']):
+                        found_emails.add(email)
 
-            if found_emails:
-                print(colored(f"[+] Found {len(found_emails)} emails on the page!", "green"))
-                results = []
-                for email in found_emails:
-                    print(f"    - {email}")
-                    results.append({"name": "Contact", "email": email, "role": "Website Contact"})
-                return list(results)
-            else:
-                print(colored("[-] No emails found on homepage.", "red"))
-                return []
+            except Exception:
+                continue
 
-        except Exception as e:
-            print(colored(f"[!] Scrape Error: {e}", "red"))
+        if found_emails:
+            print(colored(f"[+] Found {len(found_emails)} emails for {domain}!", "green"))
+            results = []
+            for email in found_emails:
+                results.append({"name": "Decision Maker", "email": email, "role": "Stakeholder"})
+            return list(results)
+        else:
+            print(colored(f"[-] No leads found for {domain}.", "red"))
             return []
 
 if __name__ == "__main__":

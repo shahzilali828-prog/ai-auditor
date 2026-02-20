@@ -19,20 +19,20 @@ class AutoEmailer:
         
         # The "Million Dollar Script"
         body = f"""
-        Hi {recipient_name},
+        Hi,
 
         I’m an automated compliance auditor. I just scanned your website {company_name}.
 
-        CRITICAL ERROR: You are missing the Article 13 'Contact Clause' in your privacy policy.
+        CRITICAL ERROR: You are missing the 'Right to Erasure' and 'Do Not Sell' clauses (GDPR/CCPA).
         
-        If a European user reports this, fines under GDPR start at €20,000.
+        This exposes you to significant legal risk from international visitors.
 
-        I have generated the correct legal text for you to fix this immediately.
+        I have generated the correct legal text for you to fix this immediately:
         
-        [Link to Download Fix - $499]
+        https://ai-auditor-jwjp8ql8ifdk7i92j52pdt.streamlit.app
 
         Best,
-        AI Auditor Bot
+        AI Compliance Auditor
         """
 
         msg = MIMEMultipart()
