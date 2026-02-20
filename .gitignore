@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.stfolder/
+.streamlit/
+history.csv
+outreach_history.csv
+leads_found.csv
+domains.txt
+*.txt
+!requirements.txt
+!app.py
+*.md
+!README.md
