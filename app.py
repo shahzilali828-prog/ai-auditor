@@ -1,6 +1,6 @@
 import streamlit as st
 from scanner import GDPRScanner
-kimport time
+import time
 
 # Page Config
 st.set_page_config(page_title="AI GDPR Auditor", page_icon="⚖️", layout="centered")
