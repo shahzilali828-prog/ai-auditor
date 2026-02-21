@@ -136,6 +136,6 @@ st.markdown("---")
 st.markdown("""
 <div class="trust-footer">
     🛡️ Powered by AI Compliance Engine v1.1<br>
-    <a href="https://www.linkedin.com/in/shahzil-ali-77a7773b1/">Contact Chief Compliance Officer</a>
+    <a href="https://www.linkedin.com/in/shahzil-ali-77a7773b1/">Connect with the Founder</a>
 </div>
 """, unsafe_allow_html=True)
