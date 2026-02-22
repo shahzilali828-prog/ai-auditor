@@ -60,12 +60,15 @@ def main():
         return
 
     run_email_mode = input("\nDo you want to send REAL emails? (y/n): ").lower()
-
+    
     # 3. Initialize Components
     scanner = GDPRScanner()
     lead_finder = LeadFinder() # Using Free Scraper by default
     emailer = None
+    
     if run_email_mode == 'y':
+        sender_email = input("Enter your sender email (Gmail recommended): ").strip()
+        sender_pass = input("Enter your App Password (NOT your login password): ").strip()
         emailer = AutoEmailer("smtp.gmail.com", 587, sender_email, sender_pass)
 
     print(colored(f"\n[*] Starting Bulk Run on {len(domains)} targets...", "yellow"))

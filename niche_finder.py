@@ -18,47 +18,56 @@ class NicheFinder:
         print(colored(f"[*] Searching for niche: '{query}'...", "cyan"))
         domains = set()
         
-        # Using DuckDuckGo Lite version - more scraper friendly
-        search_url = f"https://lite.duckduckgo.com/lite/?q={query}"
+        # Using Google Search - more reliable than DDG right now
+        search_url = f"https://www.google.com/search?q={query}&num={num_results + 10}"
         
         try:
             header = random.choice(self.headers)
             response = requests.get(search_url, headers=header, timeout=10)
             
             if response.status_code != 200:
-                print(colored(f"[!] Search failed with status {response.status_code}", "red"))
-                return []
+                print(colored(f"[!] Search failed with status {response.status_code}. Retry in 5s...", "red"))
+                time.sleep(5)
+                # Try one more time with a different header
+                header = random.choice(self.headers)
+                response = requests.get(search_url, headers=header, timeout=10)
+                if response.status_code != 200:
+                    return []
 
             soup = BeautifulSoup(response.text, 'html.parser')
-            # DuckDuckGo Lite uses <a> tags with class 'result-link' or just inside table rows
-            links = soup.find_all('a', href=True)
-
-            for link in links:
-                href = link['href']
+            
+            # Google results are typically in <a> tags within <div>s
+            # We look for links that look like business websites
+            for a in soup.find_all('a', href=True):
+                href = a['href']
                 
-                # Filter out internal DDG links
-                if "/l/?kh=" in href:
-                    # DDG dynamic link - extract the actual URL
-                    from urllib.parse import unquote
-                    match = re.search(r'uddg=([^&]+)', href)
-                    if match:
-                        href = unquote(match.group(1))
-
-                if not href.startswith('http'):
+                # Google often wraps external links
+                if href.startswith('/url?q='):
+                    href = href.split('/url?q=')[1].split('&')[0]
+                
+                if not href.startswith('http') or 'google.com' in href:
                     continue
 
                 # Clean the domain
                 parsed = urlparse(href)
-                domain = parsed.netloc if parsed.netloc else parsed.path.split('/')[0]
-                domain = domain.replace('www.', '')
+                domain = parsed.netloc.replace('www.', '')
                 
-                # Basic filter for common junk domains
-                junk = ['duckduckgo.com', 'google.com', 'facebook.com', 'linkedin.com', 'yelp.com', 'yellowpages.com', 'tripadvisor.com', 'instagram.com', 'twitter.com']
+                # Filter out junk and common directories slowing us down
+                junk = ['google', 'facebook', 'linkedin', 'yelp', 'yellowpages', 'tripadvisor', 'instagram', 'twitter', 'youtube', 'mapquest', 'bbb.org']
                 if domain and not any(j in domain for j in junk):
                     domains.add(domain)
                 
                 if len(domains) >= num_results:
                     break
+
+            if not domains:
+                # Fallback to a simpler regex if soup fails
+                links = re.findall(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', response.text)
+                for link in links:
+                    domain = urlparse(link).netloc.replace('www.', '')
+                    if domain and not any(j in domain for j in junk) and 'google' not in domain:
+                        domains.add(domain)
+                        if len(domains) >= num_results: break
 
             print(colored(f"[+] Found {len(domains)} unique business domains.", "green"))
             return list(domains)
