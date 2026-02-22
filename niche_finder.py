@@ -17,6 +17,7 @@ class NicheFinder:
     def find_domains(self, query, num_results=10):
         print(colored(f"[*] Searching for niche: '{query}'...", "cyan"))
         domains = set()
+        junk = ['google', 'facebook', 'linkedin', 'yelp', 'yellowpages', 'tripadvisor', 'instagram', 'twitter', 'youtube', 'mapquest', 'bbb.org']
         
         # Using Google Search - more reliable than DDG right now
         search_url = f"https://www.google.com/search?q={query}&num={num_results + 10}"
@@ -53,7 +54,6 @@ class NicheFinder:
                 domain = parsed.netloc.replace('www.', '')
                 
                 # Filter out junk and common directories slowing us down
-                junk = ['google', 'facebook', 'linkedin', 'yelp', 'yellowpages', 'tripadvisor', 'instagram', 'twitter', 'youtube', 'mapquest', 'bbb.org']
                 if domain and not any(j in domain for j in junk):
                     domains.add(domain)
                 
