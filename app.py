@@ -72,7 +72,7 @@ st.markdown("""
 with st.sidebar:
     st.header("⚙️ Audit Settings")
     api_key = st.text_input("Gemini API Key:", type="password", help="Get your key at https://aistudio.google.com/app/apikey")
-    st.info("💡 Pro Tip: Use an AI key for 'Perfect' results on complex sites like Google.")
+    st.info("💡 Pro Tip: Use an AI key for 'Perfect' results on complex sites.")
 
 # Header
 st.title("⚖️ Intelligent AI Compliance Auditor")
