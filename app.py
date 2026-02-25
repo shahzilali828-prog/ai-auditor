@@ -68,25 +68,31 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Sidebar for Settings
+with st.sidebar:
+    st.header("⚙️ Audit Settings")
+    api_key = st.text_input("Gemini API Key:", type="password", help="Get your key at https://aistudio.google.com/app/apikey")
+    st.info("💡 Pro Tip: Use an AI key for 'Perfect' results on complex sites like Google.")
+
 # Header
-st.title("⚖️ AI Compliance Auditor")
-st.markdown("### Protect your business from €20M+ GDPR fines.")
-st.markdown("Instantly scan your digital presence for hidden legal liabilities.")
+st.title("⚖️ Intelligent AI Compliance Auditor")
+st.markdown("### High-Industry Regulatory Shield")
+st.markdown("Automated legal auditing via LLM Context Reasoning.")
 
 # Input
-target_url = st.text_input("Enter your Website URL:", placeholder="https://example.com")
+target_url = st.text_input("Enter Website URL:", placeholder="https://example.com")
 
-if st.button("START COMPLIANCE AUDIT"):
+if st.button("START INTELLIGENT AUDIT"):
     if not target_url:
         st.error("Please enter a URL.")
     else:
         # The "Theater" (Loading Animation)
-        with st.spinner("🕵️ AI Engine is auditing legal clauses..."):
-            scanner = GDPRScanner()
+        with st.spinner("🧠 AI Auditor is reading the legal text..."):
+            scanner = GDPRScanner(api_key=api_key)
             if not target_url.startswith("http"):
                 target_url = "https://" + target_url
             
-            time.sleep(1.5) # Dramatic pause
+            time.sleep(1) 
             result = scanner.audit_site(target_url)
 
         # Result Display
@@ -96,16 +102,17 @@ if st.button("START COMPLIANCE AUDIT"):
             st.markdown(f"""
             <div class="report-box">
                 <h3 style="color:#1e293b; margin-top:0;">🚫 AUDIT FAILED: Non-Compliant</h3>
-                <p style="color:#64748b;">Our AI matched your site against <b>GDPR Articles 13 & 17</b>.</p>
-                <div style="background:#fff1f2; padding:10px; border-radius:6px; color:#be123c; font-weight:bold;">
-                    Found {len(result['errors'])} High-Severity Vulnerabilities.
+                <p style="color:#64748b;">AI Analysis Result for: {target_url}</p>
+                <div style="background:#fff1f2; padding:15px; border-radius:6px; color:#be123c; font-style:italic; border-left: 4px solid #be123c;">
+                    <b>AI Reasoning:</b> {result.get('reasoning', 'No reasoning provided.')}
                 </div>
             </div>
             """, unsafe_allow_html=True)
             
-            st.subheader("Vulnerability Summary:")
-            for err in result["errors"]:
-                st.markdown(f"🚩 **{err}**")
+            if result.get("errors"):
+                st.subheader("Specific Gaps Found:")
+                for err in result["errors"]:
+                    st.markdown(f"🚩 **{err}**")
 
             st.markdown("---")
             st.error("📉 Risk Profile: **HIGH (Class Action Lawsuit Potential)**")
@@ -124,18 +131,19 @@ if st.button("START COMPLIANCE AUDIT"):
             """, unsafe_allow_html=True)
             
         elif result["status"] == "SECURE":
-            st.success("✅ AUDIT PASSED: No Machine-Detectable Gaps Found.")
+            st.success("✅ AUDIT PASSED: Compliance Verified by AI.")
             st.balloons()
-            st.markdown("Your privacy policy currently meets the standard algorithmic compliance requirements.")
+            st.markdown(f"**AI Reasoning:** {result.get('reasoning', '')}")
+            st.markdown("Your digital presence adheres to the foundational requirements of GDPR/CCPA according to our automated analysis.")
 
         else:
-            st.error("Audit Interrupted. Please verify the URL and try again.")
+            st.error(f"Audit Interrupted: {', '.join(result.get('errors', ['Unknown error']))}")
 
 # Footer
 st.markdown("---")
 st.markdown("""
 <div class="trust-footer">
-    🛡️ Powered by AI Compliance Engine v1.1<br>
+    🛡️ Powered by AI Compliance Engine v2.0 (LLM-Enhanced)<br>
     <a href="https://www.linkedin.com/in/shahzil-ali-77a7773b1/">Connect with the Founder</a>
 </div>
 """, unsafe_allow_html=True)

@@ -4,26 +4,25 @@ import re
 def colored(text, color=None, on_color=None, attrs=None):
     return text
 from urllib.parse import urljoin
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class GDPRScanner:
-    def __init__(self):
-        # The "Kill List" of keywords. If these are missing, the site is ILLEGAL.
+    def __init__(self, api_key=None):
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+        if self.api_key:
+            genai.configure(api_key=self.api_key)
+            self.model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # Original checks kept for fallback or specific logic hints
         self.compliance_checks = {
-            "gdpr_contact": {
-                "keywords": ["dpo@", "privacy@", "data protection officer", "contact us", "data protection lead", "privacy team"],
-                "score": 1,
-                "error_msg": "CRITICAL: No Data Protection Contact found (GDPR Art. 13)"
-            },
-            "erasure": {
-                "keywords": ["right to erasure", "delete your data", "request deletion", "remove your information", "right to be forgotten", "deletion of personal data", "delete account"],
-                "score": 1,
-                "error_msg": "CRITICAL: No 'Right to Erasure' clause found (GDPR Art. 17)"
-            },
-            "ccpa_sells": {
-                "keywords": ["do not sell my", "opt-out", "selling your personal information", "notice of right to opt-out", "don't sell", "personal information sales"],
-                "score": 1,
-                "error_msg": "CRITICAL: Missing 'Do Not Sell' link (CCPA Requirement)"
-            }
+            "gdpr_compliance": "Does the privacy policy explicitly mention GDPR compliance and data subject rights (Art. 13/14)?",
+            "erasure": "Does the policy explain the 'Right to Erasure' or 'Right to be Forgotten' (Art. 17)?",
+            "ccpa": "Does the policy address CCPA/CPRA rights, specifically the right to opt-out of sales?",
+            "ai_governance": "Does the site mention how AI/automated decision-making is handled (EU AI Act requirement)?"
         }
 
     def fetch_privacy_policy(self, url):
@@ -60,35 +59,54 @@ class GDPRScanner:
 
     def audit_site(self, url):
         """
-        Main function to audit a site.
+        Main function to audit a site using AI reasoning.
         """
-        print(f"\n--- STARTING AUDIT FOR: {url} ---")
+        print(f"\n--- STARTING INTELLIGENT AUDIT FOR: {url} ---")
         text = self.fetch_privacy_policy(url)
         
         if not text:
-            return {"status": "ERROR", "email_needed": False}
+            return {"status": "ERROR", "errors": ["Failed to fetch privacy policy text."]}
 
-        failed_checks = []
+        if not self.api_key:
+            print(colored("[!] AI Key missing. Falling back to keyword scan...", "yellow"))
+            # Simple fallback check for keyword detection
+            failed = []
+            if "gdpr" not in text: failed.append("Likely missing GDPR mentions")
+            if "delete" not in text and "erasure" not in text: failed.append("Likely missing deletion rights")
+            return {"status": "VULNERABLE" if failed else "SECURE", "errors": failed}
+
+        # AI REASONING BLOCK
+        print(colored("[*] Sending content to AI Auditor (LLM)...", "cyan"))
+        prompt = f"""
+        Act as a Senior Data Privacy Auditor. Analyze the following Privacy Policy text from {url}.
+        Check for compliance with GDPR (Art. 13, 17), CCPA, and general AI Governance.
         
-        for check_name, rules in self.compliance_checks.items():
-            found = False
-            for keyword in rules['keywords']:
-                if keyword in text:
-                    found = True
-                    break
-            
-            if not found:
-                print(colored(f"[-] FAILED: {rules['error_msg']}", "red"))
-                failed_checks.append(rules['error_msg'])
-            else:
-                print(colored(f"[+] PASSED: Found keyword for {check_name}", "green"))
-
-        if len(failed_checks) > 0:
-            print(colored(f"\n[!!!] VULNERABLE: {len(failed_checks)} Critical Errors Found.", "red", attrs=['bold']))
-            return {"status": "VULNERABLE", "errors": failed_checks}
-        else:
-            print(colored("\n[OK] SECURE: No Machine-Detectable Errors.", "green", attrs=['bold']))
-            return {"status": "SECURE", "errors": []}
+        TEXT:
+        {text[:15000]} # Limit text for token efficiency
+        
+        Return exactly in this JSON format:
+        {{
+            "status": "SECURE" or "VULNERABLE",
+            "findings": ["List of specific missing clauses or legal gaps"],
+            "reasoning": "Brief legal explanation of why it passed or failed"
+        }}
+        """
+        
+        try:
+            response = self.model.generate_content(prompt)
+            # Use regex to find JSON in case the model adds chatter
+            import json
+            match = re.search(r'\{.*\}', response.text, re.DOTALL)
+            if match:
+                result = json.loads(match.group())
+                return {
+                    "status": result.get("status", "ERROR"),
+                    "errors": result.get("findings", []),
+                    "reasoning": result.get("reasoning", "")
+                }
+            return {"status": "ERROR", "errors": ["AI response format error"]}
+        except Exception as e:
+            return {"status": "ERROR", "errors": [f"AI Audit Failed: {str(e)}"]}
 
 if __name__ == "__main__":
     scanner = GDPRScanner()
