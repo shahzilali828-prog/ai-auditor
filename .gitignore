@@ -9,6 +9,7 @@ outreach_history.csv
 leads_found.csv
 domains.txt
 *.txt
+.env
 !requirements.txt
 !app.py
 *.md

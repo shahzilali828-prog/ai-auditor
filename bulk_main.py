@@ -107,12 +107,14 @@ def main():
         selected_template = use_templates[selected_template_key]
         print(colored(f"[+] Using {selected_template_key} pitch.", "green"))
 
+    ignore_history = input("\n[DEBUG] Ignore history and rescan everything? (y/n): ").lower() == 'y'
+
     print(colored(f"\n[*] Starting Bulk Run on {len(domains)} targets...", "yellow"))
     
     for i, domain in enumerate(domains):
         print(colored(f"\n[{i+1}/{len(domains)}] Processing: {domain}", "blue", attrs=['bold']))
         
-        if is_already_contacted(domain):
+        if not ignore_history and is_already_contacted(domain):
             print(colored(f"[-] Already contacted {domain}. Skipping.", "yellow"))
             continue
 
@@ -123,7 +125,7 @@ def main():
             continue
         
         if scan_result["status"] == "ERROR":
-            print(colored(f"[!] Could not scan {domain}.", "red"))
+            print(colored(f"[!] Could not scan {domain}: {', '.join(scan_result.get('errors', []))}", "red"))
             continue
 
         # Step B: Find Leads

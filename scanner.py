@@ -4,7 +4,7 @@ import re
 def colored(text, color=None, on_color=None, attrs=None):
     return text
 from urllib.parse import urljoin
-import google.generativeai as genai
+from google import genai
 import os
 from dotenv import load_dotenv
 
@@ -14,8 +14,11 @@ class GDPRScanner:
     def __init__(self, api_key=None):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         if self.api_key:
-            genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
+            print(colored(f"[*] AI Auditor Initialized (New SDK: {self.api_key[:5]}...{self.api_key[-4:]})", "green"))
+            self.client = genai.Client(api_key=self.api_key)
+            self.model_name = 'gemini-1.5-flash'
+        else:
+            print(colored("[!] WARNING: No Gemini API Key found.", "yellow"))
         
         # Original checks kept for fallback or specific logic hints
         self.compliance_checks = {
@@ -93,7 +96,11 @@ class GDPRScanner:
         """
         
         try:
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt
+            )
+            
             # Use regex to find JSON in case the model adds chatter
             import json
             match = re.search(r'\{.*\}', response.text, re.DOTALL)
@@ -104,8 +111,10 @@ class GDPRScanner:
                     "errors": result.get("findings", []),
                     "reasoning": result.get("reasoning", "")
                 }
+            print(colored(f"[!] AI Format Error. Raw Response: {response.text[:100]}", "red"))
             return {"status": "ERROR", "errors": ["AI response format error"]}
         except Exception as e:
+            print(colored(f"[!] AI Audit Exception: {str(e)}", "red"))
             return {"status": "ERROR", "errors": [f"AI Audit Failed: {str(e)}"]}
 
 if __name__ == "__main__":
