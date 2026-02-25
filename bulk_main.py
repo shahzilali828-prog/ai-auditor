@@ -6,9 +6,11 @@ from scanner import GDPRScanner
 from lead_finder import LeadFinder
 from auto_emailer import AutoEmailer
 from niche_finder import NicheFinder
+from templates import get_ceo_templates
 
 # Configuration
-HISTORY_FILE = "outreach_history.csv"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+HISTORY_FILE = os.path.join(BASE_DIR, "outreach_history.csv")
 EMAIL_DELAY = 60 # Seconds between emails to avoid spam filters
 
 def log_to_history(domain, status, emails_found, email_sent):
@@ -38,7 +40,8 @@ def main():
     print(colored("[1] Target Selection", "yellow"))
     print("1. Discovery Mode (Search a Niche)")
     print("2. Import Mode (Load from domains.txt)")
-    choice = input("Select mode (1/2): ").strip()
+    print("3. CEO MODE (High-Ticket Industries)")
+    choice = input("Select mode (1/2/3): ").strip()
     
     domains = []
     if choice == '1':
@@ -46,8 +49,25 @@ def main():
         limit = int(input("How many businesses to target? (e.g. 10): ") or 10)
         finder = NicheFinder()
         domains = finder.find_domains(niche, num_results=limit)
+    elif choice == '3':
+        finder = NicheFinder()
+        niches = finder.get_premium_niches()
+        print(colored("\n--- SELECT HIGH-TICKET INDUSTRY ---", "cyan"))
+        for k, v in niches.items():
+            print(f"{k}. {v['name']}")
+        
+        cat_id = input("Select Industry (1-3): ").strip()
+        if cat_id in niches:
+            niche_info = niches[cat_id]
+            print(colored(f"\n[CEO TIP] {niche_info['tip']}", "magenta", attrs=['bold']))
+            print(colored("[PRICE GOAL] Target $1,250 - $4,500 per Audit.", "green", attrs=['bold']))
+            
+            query = finder.generate_premium_query(cat_id)
+            limit = int(input(f"Targeting '{query}'. How many results? (default 10): ") or 10)
+            domains = finder.find_domains(query, num_results=limit)
     else:
-        file_path = "domains.txt"
+        # Use absolute path to ensure file is found regardless of execution directory
+        file_path = os.path.join(BASE_DIR, "domains.txt")
         if not os.path.isfile(file_path):
             print(colored(f"[-] {file_path} not found. Create it with one domain per line.", "red"))
             return
@@ -66,10 +86,26 @@ def main():
     lead_finder = LeadFinder() # Using Free Scraper by default
     emailer = None
     
+    sender_name = "AI Compliance Auditor"
     if run_email_mode == 'y':
+        sender_name = input("Enter your Professional Sender Name (e.g. 'Shahzil | AI Auditor'): ").strip() or "AI Compliance Auditor"
         sender_email = input("Enter your sender email (Gmail recommended): ").strip()
-        sender_pass = input("Enter your App Password (NOT your login password): ").strip()
+        sender_pass = input("Enter your App Password (16 characters): ").strip().replace(" ", "")
         emailer = AutoEmailer("smtp.gmail.com", 587, sender_email, sender_pass)
+
+    ceo_mode = (choice == '3')
+    use_templates = None
+    if ceo_mode:
+        use_templates = get_ceo_templates()
+        print(colored("\n--- SELECT CEO PITCH TEMPLATE ---", "cyan"))
+        # Show keys
+        template_keys = list(use_templates.keys())
+        for i, k in enumerate(template_keys):
+            print(f"{i+1}. {k.capitalize()} Template")
+        t_choice = int(input("Select Template # (default 1): ") or 1) - 1
+        selected_template_key = template_keys[t_choice]
+        selected_template = use_templates[selected_template_key]
+        print(colored(f"[+] Using {selected_template_key} pitch.", "green"))
 
     print(colored(f"\n[*] Starting Bulk Run on {len(domains)} targets...", "yellow"))
     
@@ -98,17 +134,29 @@ def main():
         
         # Step C: Email
         email_sent = False
-        if run_email_mode == 'y' and emailer:
-            target = leads[0] # Pitch the first valid lead
-            print(f"[*] Pitching: {target['email']}")
-            email_sent = emailer.send_pitch(target['email'], target['name'] or "Business Owner", domain)
+        if emailer:
+            # For simplicity, we pitch the first lead found
+            target_email = leads[0]['email']
+            target_name = leads[0]['name'] or "Business Owner"
+            print(colored(f"[*] Pitching: {target_email}", "cyan"))
             
-            if email_sent:
-                print(colored(f"[+] Pitch successful!", "green"))
+            # CEO MODE OVERRIDE
+            if ceo_mode and selected_template:
+                subj = selected_template['subject'].format(domain=domain)
+                body = selected_template['body'].format(name=target_name, domain=domain, sender_name=sender_name)
+                success = emailer.send_pitch(target_email, target_name, domain, from_name=sender_name, subject=subj, body=body)
+            else:
+                success = emailer.send_pitch(target_email, target_name, domain, from_name=sender_name)
+            
+            if success:
+                email_sent = True
+                print(colored(f"[+] Email sent successfully!", "green"))
                 # Delay to prevent spam flags
                 if i < len(domains) - 1:
                     print(f"[*] Sleeping for {EMAIL_DELAY}s...")
                     time.sleep(EMAIL_DELAY)
+            else:
+                print(colored(f"[!] Failed to send email.", "red"))
         else:
             print(colored(f"[DEMO] Would have emailed: {leads[0]['email']}", "white"))
 

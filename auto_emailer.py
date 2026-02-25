@@ -11,14 +11,16 @@ class AutoEmailer:
         self.email = sender_email
         self.password = sender_password
 
-    def send_pitch(self, recipient_email, recipient_name, company_name):
+    def send_pitch(self, recipient_email, recipient_name, company_name, from_name="AI Compliance Auditor", subject=None, body=None):
         """
         Sends the Cold Email Pitch to the CEO.
         """
-        subject = f"Legal vulnerability on {company_name} (GDPR)"
+        if not subject:
+            subject = f"Legal vulnerability on {company_name} (GDPR)"
         
-        # The "Million Dollar Script"
-        body = f"""
+        if not body:
+            # The "Million Dollar Script" (Default)
+            body = f"""
         Hi,
 
         I’m an automated compliance auditor. I just scanned your website {company_name}.
@@ -32,11 +34,11 @@ class AutoEmailer:
         https://ai-auditor-jwjp8ql8ifdk7i92j52pdt.streamlit.app
 
         Best,
-        AI Compliance Auditor
+        {from_name}
         """
 
         msg = MIMEMultipart()
-        msg['From'] = self.email
+        msg['From'] = f"{from_name} <{self.email}>"
         msg['To'] = recipient_email
         msg['Subject'] = subject
         msg.attach(MIMEText(body, 'plain'))

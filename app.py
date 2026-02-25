@@ -118,7 +118,7 @@ if st.button("START COMPLIANCE AUDIT"):
             
             st.markdown(f"""
                 <a href="{LEMON_SQUEEZY_LINK}" class="buy-button">
-                    DOWNLOAD THE FIX & SECURE BUSINESS ($297)
+                    GET CERTIFIED & SECURE BUSINESS ($1,250)
                 </a>
                 <p class="trust-footer">✅ 100% Satisfaction Guarantee | Attorney-Reviewed Templates</p>
             """, unsafe_allow_html=True)
